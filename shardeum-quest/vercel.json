@@ -9,7 +9,7 @@
       }
     },
     {
-      "src": "backend/src/server.js",
+      "src": "backend/api/index.js",
       "use": "@vercel/node",
       "config": {
         "maxLambdaSize": "50mb"
@@ -19,7 +19,7 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/backend/src/server.js"
+      "dest": "/backend/api/index.js"
     },
     {
       "src": "/(.*)",
@@ -28,10 +28,5 @@
   ],
   "env": {
     "NODE_ENV": "production"
-  },
-  "functions": {
-    "backend/src/server.js": {
-      "maxDuration": 10
-    }
   }
 }
