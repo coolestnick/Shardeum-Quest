@@ -1,0 +1,37 @@
+{
+  "name": "shardeum-quest",
+  "version": "1.0.0",
+  "description": "A gamified DeFi learning platform built on Shardeum blockchain",
+  "main": "backend/api/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy": "hardhat run scripts/deploy.js --network shardeumUnstable",
+    "dev": "concurrently \"npm run start --prefix backend\" \"npm start --prefix frontend\"",
+    "build": "npm run build --prefix frontend",
+    "vercel-build": "npm run build --prefix frontend",
+    "start": "node backend/src/server.js",
+    "install-all": "npm install && npm install --prefix backend && npm install --prefix frontend"
+  },
+  "keywords": [
+    "defi",
+    "shardeum",
+    "blockchain",
+    "education",
+    "web3",
+    "gamification"
+  ],
+  "author": "ShardeumQuest Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^3.0.0",
+    "@openzeppelin/contracts": "^5.0.0",
+    "hardhat": "^2.19.0",
+    "concurrently": "^7.6.0"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
