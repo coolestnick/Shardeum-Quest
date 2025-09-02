@@ -1,0 +1,4 @@
+# Force clean build
+node_modules
+.next
+.vercel
