@@ -30,6 +30,7 @@ function Profile() {
 
   const fetchProfile = async () => {
     try {
+      console.log('Fetching profile with token:', token ? 'present' : 'missing');
       const response = await axios.get('/api/users/profile', {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -37,6 +38,8 @@ function Profile() {
       setUsername(response.data.username || '');
     } catch (error) {
       console.error('Error fetching profile:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Status:', error.response?.status);
       
       // If 401 or 404, user might not be authenticated properly
       if (error.response?.status === 401 || error.response?.status === 404) {
@@ -45,10 +48,7 @@ function Profile() {
           walletAddress: account,
           username: '',
           totalXP: 0,
-          completedQuests: [],
-          achievements: [],
-          registeredAt: new Date(),
-          lastActiveAt: new Date()
+          completedQuests: []
         };
         setProfile(basicProfile);
         setUsername('');
@@ -85,9 +85,9 @@ function Profile() {
     }
   };
 
-  const hasAchievement = (achievementId) => {
+  const hasAchievement = (achievement) => {
     if (!profile) return false;
-    return profile.achievements.some(a => a.achievementId === achievementId);
+    return profile.totalXP >= achievement.requiredXP;
   };
 
   if (loading) {
@@ -167,7 +167,7 @@ function Profile() {
           {achievements.map(achievement => (
             <div
               key={achievement.id}
-              className={`achievement-badge ${hasAchievement(achievement.id) ? 'unlocked' : ''}`}
+              className={`achievement-badge ${hasAchievement(achievement) ? 'unlocked' : ''}`}
             >
               <h4>{achievement.name}</h4>
               <p style={{ fontSize: '0.9rem', marginTop: '0.5rem' }}>
@@ -187,7 +187,7 @@ function Profile() {
           <p>No quests completed yet</p>
         ) : (
           <div style={{ marginTop: '1rem' }}>
-            {profile.completedQuests.map((quest, index) => (
+            {profile.completedQuests.map((questId, index) => (
               <div key={index} style={{ 
                 padding: '1rem', 
                 background: 'rgba(255,255,255,0.05)', 
@@ -196,8 +196,8 @@ function Profile() {
                 display: 'flex',
                 justifyContent: 'space-between'
               }}>
-                <span>Quest #{quest.questId}</span>
-                <span className="xp-badge">{quest.xpEarned} XP</span>
+                <span>Quest #{questId}</span>
+                <span className="xp-badge">Completed</span>
               </div>
             ))}
           </div>

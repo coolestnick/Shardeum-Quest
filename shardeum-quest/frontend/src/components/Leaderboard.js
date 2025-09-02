@@ -14,11 +14,17 @@ function Leaderboard() {
 
   const fetchLeaderboard = async () => {
     try {
-      const response = await axios.get('/api/users/leaderboard', {
-        params: { limit, offset: page * limit }
-      });
-      setUsers(response.data.users);
-      setTotal(response.data.total);
+      const response = await axios.get('/api/users/leaderboard');
+      
+      // The API returns an array directly, not an object with users/total
+      if (Array.isArray(response.data)) {
+        setUsers(response.data);
+        setTotal(response.data.length);
+      } else {
+        // Fallback for object format
+        setUsers(response.data.users || []);
+        setTotal(response.data.total || 0);
+      }
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
       setUsers([]);
@@ -65,8 +71,8 @@ function Leaderboard() {
                   {user.username || formatAddress(user.walletAddress)}
                 </td>
                 <td>{user.totalXP}</td>
-                <td>{user.completedQuests}</td>
-                <td>{user.achievements}</td>
+                <td>-</td>
+                <td>-</td>
               </tr>
             ))}
           </tbody>

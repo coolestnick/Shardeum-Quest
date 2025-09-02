@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { ethers } from 'ethers';
 import { useWallet } from '../context/WalletContext';
@@ -10,12 +10,10 @@ function QuestDetail() {
   const { id } = useParams();
   const { account, token, signer, isRestoring } = useWallet();
   const { startTransaction, updateTransaction, completeTransaction } = useTransaction();
-  const navigate = useNavigate();
   
   const [quest, setQuest] = useState(null);
   const [content, setContent] = useState(null);
   const [progress, setProgress] = useState(null);
-  const [completedSteps, setCompletedSteps] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const renderQuestContent = (content) => {
@@ -127,12 +125,9 @@ function QuestDetail() {
 
   const fetchQuestDetails = async () => {
     try {
-      const [questRes, contentRes] = await Promise.all([
-        axios.get(`/api/quests/${id}`),
-        axios.get(`/api/quests/${id}/content`)
-      ]);
+      const questRes = await axios.get(`/api/quests/${id}`);
       setQuest(questRes.data);
-      setContent(contentRes.data);
+      setContent(questRes.data.content); // Content is included in the quest response
     } catch (error) {
       console.error('Error fetching quest:', error);
     } finally {
@@ -145,52 +140,13 @@ function QuestDetail() {
       const response = await axios.get('/api/progress/user', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const questProgress = response.data.activeProgress.find(p => p.questId === parseInt(id));
-      if (questProgress) {
-        setProgress(questProgress);
-        setCompletedSteps(questProgress.steps.filter(s => s.completed).map(s => s.stepId));
-      }
+      setProgress(response.data);
     } catch (error) {
       console.error('Error fetching progress:', error);
     }
   };
 
-  const startQuest = async () => {
-    try {
-      const response = await axios.post(
-        `/api/progress/start/${id}`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setProgress(response.data);
-    } catch (error) {
-      console.error('Error starting quest:', error);
-    }
-  };
 
-  const toggleStep = async (stepId) => {
-    if (!account || !token) {
-      alert('Please connect your wallet');
-      return;
-    }
-
-    const isCompleted = completedSteps.includes(stepId);
-    const newCompletedSteps = isCompleted 
-      ? completedSteps.filter(s => s !== stepId)
-      : [...completedSteps, stepId];
-    
-    setCompletedSteps(newCompletedSteps);
-
-    try {
-      await axios.put(
-        `/api/progress/update/${id}`,
-        { stepId, completed: !isCompleted },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-    } catch (error) {
-      console.error('Error updating progress:', error);
-    }
-  };
 
   const completeQuest = async () => {
     if (!signer || !account) {
@@ -198,10 +154,6 @@ function QuestDetail() {
       return;
     }
 
-    if (completedSteps.length !== quest.steps.length) {
-      alert('Please complete all steps first');
-      return;
-    }
 
     // Start global transaction loader
     startTransaction(`Completing quest: ${quest.title}`, 'Preparing transaction...');
@@ -239,10 +191,10 @@ function QuestDetail() {
 
         // Update backend with blockchain verification
         await axios.post(
-          `/api/progress/complete/${id}`,
+          `/api/progress/complete`,
           { 
-            transactionHash: receipt.transactionHash,
-            blockchainVerified: true 
+            questId: id,
+            txHash: receipt.transactionHash
           },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -265,7 +217,7 @@ function QuestDetail() {
         // Even if tx.wait() fails, still try to update backend with tx hash
         try {
           await axios.post(
-            `/api/progress/complete/${id}`,
+            `/api/progress/complete`,
             { 
               transactionHash: tx.hash,
               blockchainVerified: false // Mark as unverified since we couldn't wait
@@ -322,9 +274,9 @@ function QuestDetail() {
         <h1>{quest.title}</h1>
         <p style={{ fontSize: '1.2rem', marginBottom: '2rem' }}>{quest.description}</p>
         
-        {content && content.content && (
+        {content && (
           <div className="quest-content-formatted">
-            {renderQuestContent(content.content)}
+            {renderQuestContent(content)}
           </div>
         )}
 
@@ -336,39 +288,18 @@ function QuestDetail() {
           <div className="error" style={{ marginTop: '2rem' }}>
             Connect your wallet to track progress
           </div>
-        ) : !progress ? (
-          <button className="cta-button" onClick={startQuest} style={{ marginTop: '2rem' }}>
-            Start Quest
-          </button>
+        ) : progress?.completedQuests?.includes(parseInt(id)) ? (
+          <div className="success" style={{ marginTop: '2rem' }}>
+            ✅ Quest Completed! You earned {quest.xpReward} XP
+          </div>
         ) : (
-          <>
-            <div className="quest-steps">
-              <h2>Quest Steps</h2>
-              {quest.steps.map(step => (
-                <div 
-                  key={step.id}
-                  className={`step-item ${completedSteps.includes(step.id) ? 'completed' : ''}`}
-                  onClick={() => toggleStep(step.id)}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <div className={`step-checkbox ${completedSteps.includes(step.id) ? 'checked' : ''}`}>
-                    {completedSteps.includes(step.id) && '✓'}
-                  </div>
-                  <span>{step.title}</span>
-                </div>
-              ))}
-            </div>
-
-            {completedSteps.length === quest.steps.length && (
-              <button 
-                className="cta-button" 
-                onClick={completeQuest}
-                style={{ marginTop: '2rem' }}
-              >
-                {`Complete Quest (${quest.xpReward} XP)`}
-              </button>
-            )}
-          </>
+          <button 
+            className="cta-button" 
+            onClick={completeQuest}
+            style={{ marginTop: '2rem' }}
+          >
+            Complete Quest ({quest.xpReward} XP)
+          </button>
         )}
       </div>
     </div>

@@ -237,13 +237,13 @@ export const WalletProvider = ({ children }) => {
 
   const authenticate = async (address, signer) => {
     try {
-      const message = `Sign this message to authenticate with ShardeumQuest\\nTimestamp: ${Date.now()}`;
+      const message = `Sign this message to authenticate with ShardeumQuest\nTimestamp: ${Date.now()}`;
       const signature = await signer.signMessage(message);
       
       const response = await axios.post(`${API_URL}/api/auth/login`, {
         message,
         signature,
-        address
+        walletAddress: address
       });
       
       const { token, user } = response.data;
