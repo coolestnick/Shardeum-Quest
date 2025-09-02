@@ -83,9 +83,12 @@ module.exports = async (req, res) => {
   }
 
   try {
+    console.log('Attempting to connect to database...');
     await connectToDatabase();
+    console.log('Database connected successfully');
     
     const { questId, txHash } = req.body;
+    console.log('Request data:', { questId, txHash, user: decoded.walletAddress });
     
     const user = await User.findOne({ walletAddress: decoded.walletAddress });
     if (!user) {
@@ -115,6 +118,10 @@ module.exports = async (req, res) => {
     });
   } catch (error) {
     console.error('Complete quest error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message,
+      mongoUri: !!process.env.MONGODB_URI
+    });
   }
 };
