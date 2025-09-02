@@ -5,7 +5,7 @@
   "installCommand": "echo 'Skipping root install'",
   "functions": {
     "api/**/*.js": {
-      "runtime": "nodejs18.x"
+      "runtime": "@vercel/node"
     }
   },
   "routes": [
