@@ -29,48 +29,49 @@ function QuestDetail() {
         elements.push(<h2 key={i} style={{ color: '#ffffff', marginTop: '1.5rem', marginBottom: '0.5rem' }}>{line.substring(3)}</h2>);
       } else if (line.startsWith('### ')) {
         elements.push(<h3 key={i} style={{ color: '#00d2ff', marginTop: '1rem', marginBottom: '0.5rem' }}>{line.substring(4)}</h3>);
-      } else if ((line.startsWith('**[') && line.includes('](') && line.includes(')**')) || (line.includes('[') && line.includes('](') && line.includes(')'))) {
-        // Handle markdown links: **[Link Text](URL)** or [Link Text](URL)
-        let linkMatch = line.match(/\*\*\[(.*?)\]\((.*?)\)\*\*/);
-        if (!linkMatch) {
-          linkMatch = line.match(/\[(.*?)\]\((.*?)\)/);
-        }
+      } else if (line.includes('[') && line.includes('](') && line.includes(')')) {
+        // Handle markdown links: [Link Text](URL)
+        const linkMatch = line.match(/\[(.*?)\]\((.*?)\)/);
         
         if (linkMatch) {
-          const [, linkText, url] = linkMatch;
+          const [fullMatch, linkText, url] = linkMatch;
           const beforeLink = line.substring(0, linkMatch.index);
-          const afterLink = line.substring(linkMatch.index + linkMatch[0].length);
+          const afterLink = line.substring(linkMatch.index + fullMatch.length);
           
           elements.push(
-            <div key={i} style={{ marginBottom: '0.5rem' }}>
-              {beforeLink}
+            <div key={i} style={{ marginBottom: '1rem', textAlign: 'center' }}>
+              {beforeLink && <span style={{ marginBottom: '0.5rem', display: 'block' }}>{beforeLink}</span>}
               <a 
                 href={url} 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 style={{
-                  color: '#00d2ff',
+                  color: '#ffffff',
                   textDecoration: 'none',
                   fontWeight: 'bold',
-                  padding: '4px 8px',
-                  background: 'rgba(0, 210, 255, 0.1)',
-                  borderRadius: '4px',
-                  border: '1px solid rgba(0, 210, 255, 0.3)',
+                  padding: '12px 24px',
+                  background: 'linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%)',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(0, 210, 255, 0.5)',
                   display: 'inline-block',
-                  margin: '2px 4px'
+                  margin: '8px',
+                  boxShadow: '0 4px 15px rgba(0, 210, 255, 0.3)',
+                  transition: 'all 0.3s ease'
                 }}
                 onMouseEnter={(e) => {
-                  e.target.style.background = 'rgba(0, 210, 255, 0.2)';
-                  e.target.style.transform = 'scale(1.02)';
+                  e.target.style.background = 'linear-gradient(135deg, #00d2ff 0%, #4a8ce7 100%)';
+                  e.target.style.transform = 'translateY(-2px)';
+                  e.target.style.boxShadow = '0 6px 20px rgba(0, 210, 255, 0.4)';
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.background = 'rgba(0, 210, 255, 0.1)';
-                  e.target.style.transform = 'scale(1)';
+                  e.target.style.background = 'linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%)';
+                  e.target.style.transform = 'translateY(0)';
+                  e.target.style.boxShadow = '0 4px 15px rgba(0, 210, 255, 0.3)';
                 }}
               >
                 📖 {linkText} →
               </a>
-              {afterLink}
+              {afterLink && <span style={{ marginTop: '0.5rem', display: 'block' }}>{afterLink}</span>}
             </div>
           );
         } else {

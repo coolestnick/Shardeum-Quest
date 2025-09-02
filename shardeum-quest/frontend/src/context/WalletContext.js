@@ -25,7 +25,7 @@ export const WalletProvider = ({ children }) => {
 
   useEffect(() => {
     if (window.ethereum) {
-      const ethProvider = new ethers.BrowserProvider(window.ethereum);
+      const ethProvider = new ethers.providers.Web3Provider(window.ethereum);
       setProvider(ethProvider);
       
       window.ethereum.on('accountsChanged', handleAccountsChanged);
@@ -161,10 +161,10 @@ export const WalletProvider = ({ children }) => {
       }
       
       // Get provider and signer after network switch
-      const browserProvider = new ethers.BrowserProvider(window.ethereum);
-      setProvider(browserProvider);
+      const web3Provider = new ethers.providers.Web3Provider(window.ethereum);
+      setProvider(web3Provider);
       
-      const signer = await browserProvider.getSigner();
+      const signer = web3Provider.getSigner();
       setSigner(signer);
       
       // Authenticate with backend
