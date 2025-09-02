@@ -63,7 +63,7 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // Verify the signature
+    // Verify the signature  
     const recoveredAddress = ethers.utils.verifyMessage(message, signature);
     
     if (recoveredAddress.toLowerCase() !== walletAddress.toLowerCase()) {
