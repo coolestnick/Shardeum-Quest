@@ -29,9 +29,13 @@ function QuestDetail() {
         elements.push(<h2 key={i} style={{ color: '#ffffff', marginTop: '1.5rem', marginBottom: '0.5rem' }}>{line.substring(3)}</h2>);
       } else if (line.startsWith('### ')) {
         elements.push(<h3 key={i} style={{ color: '#00d2ff', marginTop: '1rem', marginBottom: '0.5rem' }}>{line.substring(4)}</h3>);
-      } else if (line.startsWith('**[') && line.includes('](') && line.includes(')**')) {
-        // Handle markdown links: **[Link Text](URL)**
-        const linkMatch = line.match(/\*\*\[(.*?)\]\((.*?)\)\*\*/);
+      } else if ((line.startsWith('**[') && line.includes('](') && line.includes(')**')) || (line.includes('[') && line.includes('](') && line.includes(')'))) {
+        // Handle markdown links: **[Link Text](URL)** or [Link Text](URL)
+        let linkMatch = line.match(/\*\*\[(.*?)\]\((.*?)\)\*\*/);
+        if (!linkMatch) {
+          linkMatch = line.match(/\[(.*?)\]\((.*?)\)/);
+        }
+        
         if (linkMatch) {
           const [, linkText, url] = linkMatch;
           const beforeLink = line.substring(0, linkMatch.index);
