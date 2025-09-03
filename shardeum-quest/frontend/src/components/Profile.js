@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { API_BASE_URL } from '../config/api';
 import { useWallet } from '../context/WalletContext';
 
 function Profile() {
@@ -23,36 +24,31 @@ function Profile() {
       navigate('/');
       return;
     }
-    if (account && token) {
+    if (account) {
       fetchProfile();
     }
-  }, [account, token, navigate]);
+    // eslint-disable-next-line 
+  }, [account, navigate]);
 
   const fetchProfile = async () => {
     try {
-      const response = await axios.get('/api/users/profile', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.get(`${API_BASE_URL}/api/public/users/profile/${account}`);
       setProfile(response.data);
       setUsername(response.data.username || '');
     } catch (error) {
       console.error('Error fetching profile:', error);
-      
-      // If 401 or 404, user might not be authenticated properly
-      if (error.response?.status === 401 || error.response?.status === 404) {
-        // Create a basic profile structure using wallet data
-        const basicProfile = {
-          walletAddress: account,
-          username: '',
-          totalXP: 0,
-          completedQuests: [],
-          achievements: [],
-          registeredAt: new Date(),
-          lastActiveAt: new Date()
-        };
-        setProfile(basicProfile);
-        setUsername('');
-      }
+      // Create a basic profile structure using wallet data
+      const basicProfile = {
+        walletAddress: account,
+        username: '',
+        totalXP: 0,
+        completedQuests: [],
+        achievements: [],
+        registeredAt: new Date(),
+        lastActiveAt: new Date()
+      };
+      setProfile(basicProfile);
+      setUsername('');
     } finally {
       setLoading(false);
     }
@@ -61,16 +57,21 @@ function Profile() {
   const updateUsername = async () => {
     try {
       await axios.put(
-        '/api/users/profile',
-        { username },
-        { headers: { Authorization: `Bearer ${token}` } }
+        `${API_BASE_URL}/api/public/users/profile/${account}`,
+        { username }
       );
       setEditing(false);
-      fetchProfile();
-      // Refresh user data in WalletContext to update Navbar
+      // First fetch local profile
+      await fetchProfile();
+      // Then refresh user data in WalletContext to update Navbar
       if (refreshUserData) {
+        console.log('Refreshing user data in WalletContext...');
         await refreshUserData();
       }
+      // Force a small delay to ensure state updates
+      setTimeout(() => {
+        console.log('Username update completed');
+      }, 500);
     } catch (error) {
       console.error('Error updating username:', error);
       
@@ -98,18 +99,6 @@ function Profile() {
     return <div className="container error">Please connect your wallet to view your profile</div>;
   }
 
-  if (!token) {
-    return (
-      <div className="container">
-        <div className="error" style={{ marginBottom: '2rem' }}>
-          Authentication required. Please reconnect your wallet.
-        </div>
-        <button className="cta-button" onClick={() => window.location.reload()}>
-          Reconnect Wallet
-        </button>
-      </div>
-    );
-  }
 
   if (!profile) {
     return <div className="container error">Profile not found</div>;

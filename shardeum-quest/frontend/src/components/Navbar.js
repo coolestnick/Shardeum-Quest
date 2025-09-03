@@ -80,6 +80,11 @@ function Navbar() {
             <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.9rem' }}>
               {getDisplayName()}
             </span>
+            {user && user.totalXP !== undefined && (
+              <span style={{ color: '#00d2ff', fontSize: '0.8rem', marginLeft: '0.5rem' }}>
+                {user.totalXP} XP
+              </span>
+            )}
             <div ref={menuRef} style={{ position: 'relative' }}>
               <button 
                 className="connect-btn" 

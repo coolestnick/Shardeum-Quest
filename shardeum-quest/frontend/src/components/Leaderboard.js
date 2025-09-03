@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../config/api';
+import { useWallet } from '../context/WalletContext';
 
 function Leaderboard() {
+  const { account } = useWallet();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
@@ -10,11 +13,12 @@ function Leaderboard() {
 
   useEffect(() => {
     fetchLeaderboard();
+    // eslint-disable-next-line 
   }, [page]);
 
   const fetchLeaderboard = async () => {
     try {
-      const response = await axios.get('/api/users/leaderboard', {
+      const response = await axios.get(`${API_BASE_URL}/api/users/leaderboard`, {
         params: { limit, offset: page * limit }
       });
       setUsers(response.data.users);
@@ -30,6 +34,29 @@ function Leaderboard() {
 
   const formatAddress = (address) => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
+  const getUserDisplayName = (user) => {
+    const isCurrentUser = account && user.walletAddress.toLowerCase() === account.toLowerCase();
+    const displayName = user.username || formatAddress(user.walletAddress);
+    
+    if (isCurrentUser) {
+      return (
+        <span>
+          {displayName}
+          <span style={{ 
+            color: '#00d2ff', 
+            marginLeft: '0.5rem', 
+            fontSize: '0.8rem', 
+            fontWeight: 'bold' 
+          }}>
+            (ME)
+          </span>
+        </span>
+      );
+    }
+    
+    return displayName;
   };
 
   if (loading) {
@@ -52,23 +79,32 @@ function Leaderboard() {
             </tr>
           </thead>
           <tbody>
-            {users.map((user) => (
-              <tr key={user.walletAddress}>
-                <td>
-                  {user.rank <= 3 ? (
-                    <span className="rank-badge">#{user.rank}</span>
-                  ) : (
-                    `#${user.rank}`
-                  )}
-                </td>
-                <td>
-                  {user.username || formatAddress(user.walletAddress)}
-                </td>
-                <td>{user.totalXP}</td>
-                <td>{user.completedQuests}</td>
-                <td>{user.achievements}</td>
-              </tr>
-            ))}
+            {users.map((user) => {
+              const isCurrentUser = account && user.walletAddress.toLowerCase() === account.toLowerCase();
+              return (
+                <tr 
+                  key={user.walletAddress}
+                  style={isCurrentUser ? {
+                    backgroundColor: 'rgba(0, 210, 255, 0.1)',
+                    border: '1px solid rgba(0, 210, 255, 0.3)'
+                  } : {}}
+                >
+                  <td>
+                    {user.rank <= 3 ? (
+                      <span className="rank-badge">#{user.rank}</span>
+                    ) : (
+                      `#${user.rank}`
+                    )}
+                  </td>
+                  <td>
+                    {getUserDisplayName(user)}
+                  </td>
+                  <td>{user.totalXP}</td>
+                  <td>{user.completedQuests}</td>
+                  <td>{user.achievements}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

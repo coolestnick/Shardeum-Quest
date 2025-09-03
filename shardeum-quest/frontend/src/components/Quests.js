@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { API_BASE_URL } from '../config/api';
 import { useWallet } from '../context/WalletContext';
 
 function Quests() {
@@ -12,14 +13,15 @@ function Quests() {
 
   useEffect(() => {
     fetchQuests();
-    if (account && token) {
+    if (account) {
       fetchUserProgress();
     }
-  }, [account, token]);
+    // eslint-disable-next-line 
+  }, [account]);
 
   const fetchQuests = async () => {
     try {
-      const response = await axios.get('/api/quests');
+      const response = await axios.get(`${API_BASE_URL}/api/quests`);
       setQuests(response.data);
     } catch (error) {
       console.error('Error fetching quests:', error);
@@ -32,18 +34,11 @@ function Quests() {
 
   const fetchUserProgress = async () => {
     try {
-      const response = await axios.get('/api/progress/user', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.get(`${API_BASE_URL}/api/public/progress/user/${account}`);
       setUserProgress(response.data);
     } catch (error) {
       console.error('Error fetching progress:', error);
       setUserProgress(null);
-      
-      // If the error is 401 or 404, the token might be invalid
-      if (error.response?.status === 401 || error.response?.status === 404) {
-        console.log('Progress fetch failed - may need to reconnect wallet');
-      }
     }
   };
 
