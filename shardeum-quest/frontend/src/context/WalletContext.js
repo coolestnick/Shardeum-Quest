@@ -21,7 +21,7 @@ export const WalletProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('authToken'));
 
-  const API_URL = ''; // Use relative URLs for API calls
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
   useEffect(() => {
     if (window.ethereum) {
@@ -44,6 +44,7 @@ export const WalletProvider = ({ children }) => {
         window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
       }
     };
+    // eslint-disable-next-line 
   }, []);
 
   // Separate useEffect for checking connection when provider is ready
@@ -56,6 +57,7 @@ export const WalletProvider = ({ children }) => {
       console.log('No wallet detected, stopping restoration');
       setIsRestoring(false);
     }
+    // eslint-disable-next-line 
   }, [provider]);
 
   const handleAccountsChanged = async (accounts) => {
@@ -261,9 +263,7 @@ export const WalletProvider = ({ children }) => {
 
   const restoreUserData = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/users/profile`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.get(`${API_URL}/api/public/users/profile/${account}`);
       
       setUser({
         walletAddress: response.data.walletAddress,
@@ -309,8 +309,27 @@ export const WalletProvider = ({ children }) => {
   };
 
   const refreshUserData = async () => {
-    if (token && account) {
-      await restoreUserData();
+    if (account) {
+      try {
+        console.log('Refreshing user data for account:', account);
+        const response = await axios.get(`${API_URL}/api/public/users/profile/${account}`);
+        
+        const updatedUser = {
+          walletAddress: response.data.walletAddress,
+          username: response.data.username,
+          totalXP: response.data.totalXP,
+          completedQuests: response.data.completedQuests.length,
+          achievements: response.data.achievements.length
+        };
+        
+        console.log('Setting updated user data:', updatedUser);
+        setUser(updatedUser);
+        
+        return updatedUser;
+      } catch (error) {
+        console.error('Failed to refresh user data:', error);
+        throw error;
+      }
     }
   };
 
